@@ -1913,7 +1913,14 @@ class TypeSystem(object):
         ('name', template_arg_type1, template_arg_type2, ...).  This is not ment
         to replace cython_functionname(), but complement it.
         """
+        cython_operators = {
+            'operator()': '__call__',
+            'operator+': '__add__'
+        }
         if isinstance(name, basestring):
+            if name in cython_operators:
+                return cython_operators[name]
+
             return name
         fname = name[0] 
         cfs = [] 

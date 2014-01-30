@@ -57,6 +57,12 @@ class A {
   int a;
   virtual void call() {a=1;};
   void write_out(std::string file_name, std::string linefeed="\n") const {};
+
+  //operators
+  int operator() () {return a;}
+  int operator() (int b) {a=b; return a;}
+  A * operator+ () {return this;}
+  A * operator+ (A * other) {return this;}
 };
 
 class B : public A {
