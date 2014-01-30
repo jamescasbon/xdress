@@ -577,14 +577,17 @@ class GccxmlBaseDescriber(object):
         self._pprint(node)
         self.visit(node)  # Walk farther down the tree
 
-    def _visit_func(self, node):
+    def _visit_func(self, node, operator=False):
         name = node.attrib['name']
+        if operator:
+            name = 'operator' + name
         if name.startswith('_') or name in FORBIDDEN_NAMES:
             warn_forbidden_name(name, self.name)
             return
         demangled = node.attrib.get('demangled', "")
         demangled = demangled if name + '<' in demangled \
                                  and '>' in demangled else None
+
         if demangled is None:
             # normal function
             self._currfunc.append(name)
@@ -628,6 +631,10 @@ class GccxmlBaseDescriber(object):
         """visits a member function."""
         self._pprint(node)
         self._visit_func(node)
+
+    def visit_operatormethod(self, node):
+        self._pprint(node)
+        self._visit_func(node, operator=True)
 
     def visit_function(self, node):
         """visits a non-member function."""
@@ -1283,8 +1290,6 @@ def clang_parent_namespace(node):
         return node.semantic_parent.spelling
     # Otherwise, return none
 
-_operator_pattern = re.compile(r'^operator\W')
-
 def clang_describe_class(cls):
     """Describe the class at the given clang AST node"""
     if cls.get_definition() is None:
@@ -1314,9 +1319,7 @@ def clang_describe_class(cls):
             parents.append(clang_describe_type(kid.type, kid.location))
         elif kid.access == AccessKind.PUBLIC:
             if kind == CursorKind.CXX_METHOD:
-                # TODO: For now, we ignore operators
-                if not _operator_pattern.match(kid.spelling):
-                    methods[clang_describe_args(kid)] = clang_describe_type(kid.result_type, kid.location)
+                methods[clang_describe_args(kid)] = clang_describe_type(kid.result_type, kid.location)
             elif kind == CursorKind.CONSTRUCTOR:
                 methods[(cons,)+clang_describe_args(kid)[1:]] = None
             elif kind == CursorKind.DESTRUCTOR:

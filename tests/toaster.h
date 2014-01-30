@@ -56,6 +56,12 @@ public:
   int* pointers(int* a, const int* b, int* const c, const int* const d);
   int& reference(int& a, const int& b);
 
+  // Operators
+  int operator() ();
+  int operator() (int slices);
+  Toaster * operator+();
+  Toaster * operator+(Toaster * other);
+
 private:
   // Should not be described
   int hidden();

@@ -415,6 +415,7 @@ def classcpppxd(desc, exceptions=True, ts=None):
         for a in margs:
             ts.cython_cimport_tuples(a[1], cimport_tups, inc)
         estr = _exception_str(exceptions, desc['name']['language'], mrtn, ts)
+        print(mname, mcppname, mcyname, mrtn)
         if mname == mcppname == mcyname:
             line = "{0}({1}) {2}".format(mname, argfill, estr)
         else:
