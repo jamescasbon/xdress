@@ -1907,20 +1907,37 @@ class TypeSystem(object):
         return set([self._cython_import_cases[len(tup)](tup) for tup in x])
 
     @memoize_method
+    def cython_operatorname(self, name, args):
+        """ return a cython name for the c++ operator """
+        # TODO move data to __init__
+        cython_binary_operators = {
+            'operator+': '__add__',
+            'operator-': '__sub__',
+            'operator*': '__mul__'
+        }
+        cython_unary_operators = {
+            'operator+': '__pos__',
+            'operator-': '__neg__',
+        }
+        cython_operators = {
+            'operator()': '__call__',
+        }
+        if name in cython_operators:
+            return cython_operators[name]
+        elif len(args) == 0 and name in cython_unary_operators:
+            return cython_unary_operators[name]
+        elif len(args) == 1 and name in cython_binary_operators:
+            return cython_binary_operators[name]
+        raise NotImplementedError('unknown operator: ' + name)
+
+    @memoize_method
     def cython_funcname(self, name):
         """This returns a name for a function based on its name, rather than
         its type.  The name may be either a string or a tuple of the form 
         ('name', template_arg_type1, template_arg_type2, ...).  This is not ment
         to replace cython_functionname(), but complement it.
         """
-        cython_operators = {
-            'operator()': '__call__',
-            'operator+': '__add__'
-        }
         if isinstance(name, basestring):
-            if name in cython_operators:
-                return cython_operators[name]
-
             return name
         fname = name[0] 
         cfs = [] 

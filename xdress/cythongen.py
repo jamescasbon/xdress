@@ -415,7 +415,6 @@ def classcpppxd(desc, exceptions=True, ts=None):
         for a in margs:
             ts.cython_cimport_tuples(a[1], cimport_tups, inc)
         estr = _exception_str(exceptions, desc['name']['language'], mrtn, ts)
-        print(mname, mcppname, mcyname, mrtn)
         if mname == mcppname == mcyname:
             line = "{0}({1}) {2}".format(mname, argfill, estr)
         else:
@@ -1315,7 +1314,14 @@ def classpyx(desc, classes=None, ts=None, max_callbacks=8):
     for mkey, mrtn in methitems:
         mname, margs = mkey[0], mkey[1:]
         mbasename = mname if isinstance(mname, basestring) else mname[0]
-        mcyname = ts.cython_funcname(mname)
+        if mbasename.startswith('operator'):
+            # TODO: operators need different aggregation into wrapper methods
+            # TODO: arity of __add__ cannot be variable
+            # TODO: the generated function needs to use the python operator, not the python operator name i.e. + not __add__
+            mcyname = ts.cython_operatorname(mname, margs)
+        else:
+            mcyname = ts.cython_funcname(mname)
+        print('X'*10, mname, mcyname, margs, mrtn)
         if mbasename.startswith('_'):
             continue  # skip private
         if any([a[1] is None or a[1][0] is None for a in margs]):
