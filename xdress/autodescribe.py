@@ -723,6 +723,8 @@ class GccxmlBaseDescriber(object):
                 islit = True
             except ValueError:
                 islit = False  # Leave default as is
+                # trim namespaces from variables at the moment
+                default = default.split('::')[-1]
             argkind = (Arg.LIT if islit else Arg.VAR, default)
         self._currfuncsig.append(arg)
         self._currargkind.append(argkind)
@@ -770,6 +772,8 @@ class GccxmlBaseDescriber(object):
         if isinstance(baset, basestring):
             return (baset, pred)
         last = baset[-1]
+        if pred == 'const' and isinstance(last, int):
+            return ((baset[0], pred), last)
         if last in self._predicates or isinstance(last, int):
             return (baset, pred)
         else:
@@ -779,9 +783,8 @@ class GccxmlBaseDescriber(object):
         """visits an array type and maps it to a '*' refinement type."""
         self._pprint(node)
         baset = self.type(node.attrib['type'])
-        # FIXME something involving the min, max, and/or size
-        # attribs needs to also go here.
-        t = self._add_predicate(baset, '*')
+        size = int(node.get('max').rstrip('u')) + 1
+        t = self._add_predicate(baset, size)
         return t
 
     def visit_functiontype(self, node):
@@ -828,7 +831,7 @@ class GccxmlBaseDescriber(object):
             t = self._add_predicate(t, 'restrict')
         return t
 
-    def type(self, id):
+    def type(self, id, var=False):
         """Resolves the type from its id and information in the root element tree."""
         node = self._root.find(".//*[@id='{0}']".format(id))
         tag = node.tag.lower()
@@ -839,6 +842,9 @@ class GccxmlBaseDescriber(object):
             self._level += 1
             t = meth(node)
             self._level -= 1
+            # FIXME: should add a isscalar/isvector method to the typesystem?
+            if var and (isinstance(t, basestring) or not isinstance(t[1], int)):
+                t = (t, 0)
         return t
 
     def visit_namespace(self, node):
@@ -1005,7 +1011,7 @@ class GccxmlVarDescriber(GccxmlBaseDescriber):
                 ns = self.context(n.attrib['context'])
                 if ns is not None and ns != "::":
                     self.desc['namespace'] = ns
-                self.desc['type'] = self.type(n.attrib['type'])
+                self.desc['type'] = self.type(n.attrib['type'], var=True)
                 break
             else:
                 msg = ("{0} autodescribing failed: found variable in {1!r} but "
@@ -1318,7 +1324,7 @@ def clang_find_function(tu, name, ts, namespace=None, filename=None, onlyin=None
 def clang_find_var(tu, name, ts, namespace=None, filename=None, onlyin=None):
     """Find the node for a given var."""
     assert isinstance(name, basestring)
-    kinds = CursorKind.ENUM_DECL,
+    kinds = (CursorKind.ENUM_DECL, CursorKind.VAR_DECL)
     decls = clang_find_decls(tu, name, kinds=kinds, onlyin=onlyin, namespace=namespace)
     decls = list(set(c.get_definition() or c for c in decls)) # Use definitions if available
     if len(decls)==1:
@@ -1427,6 +1433,16 @@ def clang_describe_var(var):
     if var.kind == CursorKind.ENUM_DECL:
         return {'name': var.spelling, 'namespace': clang_parent_namespace(var),
                 'type': clang_describe_enum(var)}
+    elif var.kind == CursorKind.VAR_DECL:
+        if var.type.kind == TypeKind.CONSTANTARRAY:
+            array_size = var.type.get_array_size()
+            typ = clang_describe_type(var.type.get_array_element_type(), var.location)
+        else:
+            typ = clang_describe_type(var.type, var.location)
+            array_size = 0
+        typ = (typ, array_size)
+        return {'name': var.spelling, 'namespace': clang_parent_namespace(var),
+                'type': typ}
     else:
         raise NotImplementedError('var kind {0}: {1}'.format(var.kind, var.spelling))
 
@@ -1655,6 +1671,8 @@ def clang_describe_expression(exp):
     if exp.referenced:
         exp = exp.referenced
     if exp.kind == CursorKind.ENUM_CONSTANT_DECL:
+        return Arg.VAR, s.strip()
+    if exp.kind == CursorKind.VAR_DECL:
         return Arg.VAR, s.strip()
     # Nothing worked, so bail
     kind = exp.kind.name

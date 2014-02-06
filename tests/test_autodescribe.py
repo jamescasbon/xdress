@@ -115,6 +115,9 @@ exp_toaster_desc = {
         ('reference', ('a', ('int32', '&')), ('b', (('int32', 'const'), '&'))): {
             'return': ('int32', '&'),
             'defaults': ((Arg.NONE, None), (Arg.NONE, None))},
+        ('variable_decl', ('slices', 'int32')): {
+            'return': 'void',
+            'defaults': ((Arg.VAR, 'default_slices'), )},
         },
     'type': 'Toaster',
     }
@@ -133,6 +136,42 @@ exp_conflict_desc = {
     'name': 'conflict',
     'namespace': 'xdress',
     'signatures': {('conflict', ('good', 'int32')): {'return': 'void', 'defaults': ((Arg.NONE, None),)}}}
+
+exp_default_slices = {
+    'name': 'default_slices',
+    'namespace': 'xdress',
+    'type': ('int32', 0)
+}
+
+exp_const_default_slices = {
+    'name': 'const_default_slices',
+    'namespace': 'xdress',
+    'type': (('int32', 'const'), 0)
+}
+
+exp_default_slices_pointer = {
+    'name': 'default_slices_pointer',
+    'namespace': 'xdress',
+    'type': (('int32', '*'), 0)
+}
+
+exp_const_default_slices_pointer = {
+    'name': 'const_default_slices_pointer',
+    'namespace': 'xdress',
+    'type': ((('int32', 'const'), '*'), 0)
+}
+
+exp_var_int_array = {
+    'name': 'var_int_array',
+    'namespace': 'xdress',
+    'type': ('int32', 2)
+}
+
+exp_const_int_array = {
+    'name': 'const_int_array',
+    'namespace': 'xdress',
+    'type': (('int32', 'const'), 2)
+}
 
 def exp_lasso_desc(n):
     lasso_name = ('lasso', n, 'int32', 'float32')
@@ -234,7 +273,12 @@ def test_describe_cpp():
                  ('class', 'Default', exp_default_desc),
                  ('class', 'NoDefaultBase', exp_nodefault_base_desc),
                  ('class', 'NoDefault', exp_nodefault_desc),
-                 ('var', 'Choices', exp_choices_desc))
+                 ('var', 'Choices', exp_choices_desc),
+                 ('var', 'default_slices', exp_default_slices),
+                 ('var', 'const_default_slices', exp_const_default_slices),
+                 ('var', 'const_default_slices_pointer', exp_const_default_slices_pointer),
+                 ('var', 'var_int_array', exp_var_int_array),
+                 ('var', 'const_int_array', exp_const_int_array))
         for kind, name, exp in goals:
             obs = ad.describe(fname, name=name, kind=kind, parsers=parser, 
                               builddir=buildbase + '-' + parser, verbose=False, 
