@@ -13,6 +13,14 @@
 
 namespace xdress {
 
+// variables
+int default_slices=8;
+const int const_default_slices=8;
+int * default_slices_pointer=&default_slices;
+const int * const_default_slices_pointer=&default_slices;
+int var_int_array [2];
+const int const_int_array [2] = {1,2};
+
 template<class T, int i=0> struct Base {
   // Fields in template classes
   int field;
@@ -55,6 +63,8 @@ public:
   const int const_(const int c) const;
   int* pointers(int* a, const int* b, int* const c, const int* const d);
   int& reference(int& a, const int& b);
+  void variable_decl(int slices=default_slices);
+
 
 private:
   // Should not be described
