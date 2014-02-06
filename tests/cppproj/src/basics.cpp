@@ -37,6 +37,11 @@ int func4(int id) {
   return id;
 };
 
+int function_with_declared_default(int x) { 
+  return x;
+};
+
+
 } // namespace cppproj
 
 double call_threenums_op_from_c(ThreeNums x) {

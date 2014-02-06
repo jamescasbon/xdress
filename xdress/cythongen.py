@@ -213,7 +213,7 @@ def varcpppxd(desc, exceptions=True, ts=None):
     """
     ts = ts or TypeSystem()
     t = ts.canon(desc['type'])
-    d = {'name': desc['name']['tarname'], 
+    d = {'name': desc['name']['tarname'],
          'header_filename':  desc['name']['incfiles'][0],
          'namespace': _format_ns(desc),
          }
@@ -229,7 +229,7 @@ def varcpppxd(desc, exceptions=True, ts=None):
         vlines += indent(enames, 4, join=False)
     else:
         ct = ts.cython_ctype(t)
-        vlines.append("{0} {1}".format(ct, d['name']))
+        vlines.append("{0} {1}".format(ct, desc['name']['srcname']))
     d['variables_block'] = indent(vlines, 4)
     if 0 == len(d['variables_block'].strip()):
         return set(), ''
@@ -275,7 +275,7 @@ def funccpppxd(desc, exceptions=True, ts=None):
 
     """
     ts = ts or TypeSystem()
-    d = {'name': desc['name']['tarname'], 
+    d = {'name': desc['name']['tarname'],
          'header_filename':  desc['name']['incfiles'][0],
          'namespace': _format_ns(desc),
          }
@@ -726,8 +726,22 @@ def modpyx(mod, classes=None, ts=None, max_callbacks=8):
     import_tups = set()
     cimport_tups = set()
     classnames = _classnames_in_mod(mod, ts)
+
+    def _order(item):
+        """ key function tp order items in pyx file """
+        # FIXME: this may not be possible to achieve perfectly since
+        # C++ can use declarations to generate circular dependencies.
+        # If we add support for variables of custom type, this will need work.
+        desc = item[1]
+        if isvardesc(desc):
+            return 0
+        elif isclassdesc(desc):
+            return 1
+        elif isfuncdesc(desc):
+            return 2
+
     with ts.local_classes(classnames):
-        for name, desc in mod.items():
+        for name, desc in sorted(mod.items(), key=_order):
             if isvardesc(desc):
                 i_tup, ci_tup, attr_str = varpyx(desc, ts=ts)
             elif isfuncdesc(desc):
@@ -1010,13 +1024,13 @@ def _gen_argfill(args, defaults):
                 if name not in taken:
                     break
         names.append(name)
-        if kind is Arg.NONE: 
+        if kind is Arg.NONE:
             afillval = name
-        elif kind is Arg.LIT: 
+        elif kind is Arg.LIT:
             afillval = "{0}={1!r}".format(name, default)
-        elif kind is Arg.VAR: 
+        elif kind is Arg.VAR:
             afillval = "{0}={1}".format(name, default)
-        elif kind is Arg.TYPE: 
+        elif kind is Arg.TYPE:
             raise ValueError("default argument value cannot be a type: {0}".format(a))
         else:
             raise ValueError("default argument value cannot be determined: "
@@ -1140,6 +1154,8 @@ def _gen_dispatcher(name, name_mangled, ts, doc=None, hasrtn=True, is_method=Tru
         argfill = ", ".join(['*args', '**kwargs'])
     lines  = ['def {0}({1}):'.format(name, argfill)]
     lines += [] if doc is None else indent('\"\"\"{0}\"\"\"'.format(doc), join=False)
+    lines += [indent("if '__skip_init' in kwargs:"),
+              indent(indent('return'))]
     types = ["types = set([(i, type(a)) for i, a in enumerate(args)])",
              "types.update([(k, type(v)) for k, v in kwargs.items()])",]
     lines += indent(types, join=False)
@@ -1236,6 +1252,9 @@ cdef class {name}{parents}:
     def __cinit__(self, *args, **kwargs):
         self._inst = NULL
         self._free_inst = True
+
+
+
 
         # cached property defaults
 {property_defaults}
@@ -1365,7 +1384,7 @@ def classpyx(desc, classes=None, ts=None, max_callbacks=8):
             ts.cython_cimport_tuples(mcname, cimport_tups)
         if mrtn is None:
             # this must be a constructor
-            if mname not in (d['name'], '__init__', 
+            if mname not in (d['name'], '__init__',
               srcname if isinstance(srcname, basestring) else srcname[:-1]):
                 continue  # skip destuctors
             if 1 == methcounts[mname]:
@@ -1425,6 +1444,7 @@ def classpyx(desc, classes=None, ts=None, max_callbacks=8):
 
     d['methods_block'] = indent(mlines)
     d['constructor_block'] = indent(clines)
+    d['srcpxd'] = desc['srcpxd_filename'].split('.')[0]
 
     d['extra'] = desc.get('extra', {}).get('pyx', '')
     d['cdefattrs'] = indent(cdefattrs)
@@ -1466,11 +1486,17 @@ def varpyx(desc, ts=None):
             vlines.append(doc.format(ename, val, name))
             vlines.append("")
     else:
-        decl, body, rtn, iscached = ts.cython_c2py(name, t, view=False, cached=False,
-                                                inst_name=inst_name)
-        vlines.append(decl)
-        vlines.append(body)
-        vlines.append(name + " = " + rtn)
+        name = desc['name']['srcname']
+        tarname = desc['name']['tarname']
+        decl = inst_name + '.' + name
+        vlines.append("{name} = {decl}".format(name=name, decl=decl))
+
+        # importing from the cdef relies on cython's type mapping
+        # custom wrappers will need more work
+        # py_inst = {name}(__skip_init = True)
+        # py_inst._inst = c_inst
+        # py_inst._free_inst = False
+
         docstring = desc.get('docstring', None)
         if docstring is None:
             docstring = '"' * 3 + nodocmsg.format(name) + '"' * 3
@@ -1583,7 +1609,7 @@ class XDressPlugin(Plugin):
             warnings.warn('cython does not seem to be installed', RuntimeWarning)
         elif cython_version_info[:2] <= (0, 17):
             warnings.warn('cython code generated by xdress requires cython v0.18+, '
-                          'cython version {0} found'.format(cython_version), 
+                          'cython version {0} found'.format(cython_version),
                           RuntimeWarning)
 
     def execute(self, rc):
