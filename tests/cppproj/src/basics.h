@@ -192,6 +192,10 @@ int func3(char *, char **, int = -1);
 
 void call_with_void_fp_struct(VoidFPStruct x);
 
+// declared argument, see #156
+const int THIS_IS_NOT_ZERO = 100;
+int function_with_declared_default(int x=THIS_IS_NOT_ZERO);
+
 // FIXME when enums are implemented properly in C++, see #96
 //int func4(PersonID id);
 int func4(int id); 
@@ -259,10 +263,14 @@ Untemplated unt = Untemplated();
 // Template member function also missed by GCC-XML
 int untrtn = unt.templated_method<float>(65.0);
 
+// values 
+cppproj::A * pointer_to_a = new cppproj::A();
+cppproj::A instance_of_a;
+
+
 #ifdef XDRESS
 std::vector<double> _temp0;
 std::vector< std::vector<double> > _temp1;
 #endif
-
 
 #endif

@@ -10,7 +10,7 @@ def test_func4():
     exp = 42
     obs = pybasics.func4(42)
     assert_equal(exp, obs)
-    
+
 def test_person_id():
     assert_equal(pybasics.JOAN, 0)
     assert_equal(pybasics.HOOVER, 1)
@@ -23,9 +23,9 @@ def test_three_nums():
 
     # assignemt
     x.a, x.b, x.c = 5, 10, 15
-    assert_equal(x.a, 5.0)    
+    assert_equal(x.a, 5.0)
     assert_equal(x.b, 10.0)
-    assert_equal(x.c, 15.0)    
+    assert_equal(x.c, 15.0)
     print("a and b and c = ", x.a, x.b, x.c)
 
     # callback assignment
@@ -76,3 +76,9 @@ def test_three_nums():
     v = pybasics.call_threenums_op_from_c(x)
     assert_equal(30.0, v)
     print("result of call_threenums_op_from_c(x) = ", v)
+
+def test_exposed_variables():
+    assert pybasics.THIS_IS_NOT_ZERO == 100
+    assert pybasics.function_with_declared_default() == 100
+    assert pybasics.function_with_declared_default(10) == 10
+
