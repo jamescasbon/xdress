@@ -79,6 +79,11 @@ _indiscovery = {'srcfiles': _fromsrcdir('discovery*'),
 variables = [
     apiname('PersonID', tarbase='pybasics', **_inbasics),
     apiname('THIS_IS_NOT_ZERO', tarbase='pybasics', **_inbasics),
+    apiname('pointer_to_a', **_inbasics),
+    apiname('const_pointer_to_a', **_inbasics),
+    apiname('pointer_to_const_a', **_inbasics),
+    apiname('const_pointer_to_const_a', **_inbasics),
+    apiname('instance_of_a', **_inbasics),
     apiname('*', **_indiscovery),
     ]
 

@@ -268,6 +268,10 @@ template <cppproj::PersonID> class EnumArg {};
 // values 
 cppproj::A * pointer_to_a = new cppproj::A();
 cppproj::A instance_of_a;
+cppproj::A * const const_pointer_to_a = new cppproj::A();
+cppproj::A const * pointer_to_const_a = new cppproj::A();
+cppproj::A const * const const_pointer_to_const_a = new cppproj::A();
+
 
 #ifdef XDRESS
 std::vector<double> _temp0;

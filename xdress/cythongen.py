@@ -733,9 +733,9 @@ def modpyx(mod, classes=None, ts=None, max_callbacks=8):
         # C++ can use declarations to generate circular dependencies.
         # If we add support for variables of custom type, this will need work.
         desc = item[1]
-        if isvardesc(desc):
+        if isclassdesc(desc):
             return 0
-        elif isclassdesc(desc):
+        elif isvardesc(desc):
             return 1
         elif isfuncdesc(desc):
             return 2
@@ -816,7 +816,7 @@ def _gen_template_func_dispatcher(templates, ts):
             raise ValueError("type {0!r} not a template".format(t))
         elif 1 == len(args):
             disp.append("{0}[{1!r}] = {2}".format(t[0], t[1], pytype))
-            disp.append("{0}[{1}] = {2}".format(t[0], 
+            disp.append("{0}[{1}] = {2}".format(t[0],
                 _gen_template_pyfill(t[1], kinds[0], ts), pytype))
         else:
             rs = [repr(_) for _ in t[1:]]
@@ -847,7 +847,7 @@ def _gen_template_class_dispatcher(templates, ts):
             raise ValueError("type {0!r} not a template".format(t))
         elif 1 == len(args):
             disp.append("{0}[{1!r}] = {2}".format(t[0], t[1], pytype))
-            disp.append("{0}[{1}] = {2}".format(t[0], 
+            disp.append("{0}[{1}] = {2}".format(t[0],
                 _gen_template_pyfill(t[1], kinds[0], ts), pytype))
         else:
             rs = [repr(_) for _ in t[1:-1]]
@@ -1489,13 +1489,35 @@ def varpyx(desc, ts=None):
         name = desc['name']['srcname']
         tarname = desc['name']['tarname']
         decl = inst_name + '.' + name
-        vlines.append("{name} = {decl}".format(name=name, decl=decl))
-
-        # importing from the cdef relies on cython's type mapping
-        # custom wrappers will need more work
-        # py_inst = {name}(__skip_init = True)
-        # py_inst._inst = c_inst
-        # py_inst._free_inst = False
+        t, tlen = t[0], t[1]
+        if isinstance(t, tuple) and t[1] == 'const':
+            t = t[0]
+        if isinstance(t, tuple) and t[1] == '*':
+            is_pointer = True
+            t = t[0]
+        else:
+            is_pointer = False
+        pytype = ts.cython_cytype(t)
+        is_builtin = pytype in ('int', 'str')  # FIXME: use the typesystem to work out if a object needs a wrapper class
+        if '.' in pytype:
+            # TODO: we could do this if we manage the imports properly
+            raise NotImplementedError("variables cannot be defined from "
+                                      "classes in other modules, so far.")
+        if not is_builtin:
+            if tlen > 0:
+                raise NotImplementedError("Arrays of custom types are not implemented yet.")
+            vlines.append("cdef {pytype} __{name} = {pytype}(__skip_init=True)".format(
+                name=name, pytype=pytype))
+            if is_pointer:
+                vlines.append("__{name}._inst = <void *> {decl}".format(name=name, decl=decl))
+            else:
+                vlines.append("__{name}._inst = <void *> &{decl}".format(name=name, decl=decl))
+            vlines.append("__{name}._free_inst = False".format(name=name))
+            vlines.append("{name} = __{name}".format(name=name))
+        else:
+            # TODO: this relies on cython's automatic conversions, could do
+            # better
+            vlines.append("{name} = {decl}".format(name=name, decl=decl))
 
         docstring = desc.get('docstring', None)
         if docstring is None:
