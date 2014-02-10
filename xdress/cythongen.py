@@ -1313,7 +1313,7 @@ def classpyx(desc, classes=None, ts=None, max_callbacks=8):
     cimport_tups = set()
     for parent in desc['parents']:
         ts.cython_import_tuples(parent, import_tups)
-        .cython_cimport_tuples(parent, cimport_tups)
+        ts.cython_cimport_tuples(parent, cimport_tups)
 
     cdefattrs = []
     mc = desc.get('extra', {}).get('max_callbacks', max_callbacks)

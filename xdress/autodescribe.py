@@ -842,8 +842,7 @@ class GccxmlBaseDescriber(object):
             self._level += 1
             t = meth(node)
             self._level -= 1
-            # FIXME: should add a isscalar/isvector method to the typesystem?
-            if var and (isinstance(t, basestring) or not isinstance(t[1], int)):
+            if var and not (self.ts.isscalar(t) or self.ts.isarray(t)):
                 t = (t, 0)
         return t
 
@@ -1594,7 +1593,7 @@ def clang_template_param_kinds(node):
     return kinds
 
 def clang_describe_template_args(node):
-    """TODO: Broken version handling defaults 
+    """TODO: Broken version handling defaults
     automatically::
 
         _, defaults = clang_template_arg_info(node.specialized_template)
@@ -1614,7 +1613,7 @@ def clang_describe_template_args(node):
         return args
 
 def clang_expand_template_args(node, args):
-    """TODO: Broken version handling defaults 
+    """TODO: Broken version handling defaults
     automatically::
 
         count,defaults = clang_template_arg_info(node)
