@@ -643,7 +643,7 @@ def test_io():
 
 @unit
 def test_isscalar():
-    t = 'int32'
+    t = 'A'
     assert not ts.isscalar(t)
     assert not ts.isscalar((t, '*'))
     assert not ts.isscalar((t, 2))
@@ -652,7 +652,7 @@ def test_isscalar():
 
 @unit
 def test_isarray():
-    t = 'int32'
+    t = 'A'
     assert not ts.isarray(t)
     assert not ts.isarray((t, '*'))
     assert not ts.isarray((t, 0))

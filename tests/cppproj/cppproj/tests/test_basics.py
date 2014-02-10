@@ -35,7 +35,7 @@ def test_func3():
     exp = -1
     obs = basics.func3("Waka Jawaka", ["Vows are apoken"], 42)
     assert_equal(exp, obs)
-    
+
 def test_voided():
     assert_true(basics.voided() is None)
 
@@ -110,7 +110,7 @@ def test_b():
     y.from_a(x)
     assert_equal(y.b, 10)
     assert_true(isinstance(y, basics.A))
-    
+
 def test_c():
     x = basics.A()
     x.a = 10
@@ -153,7 +153,7 @@ def test_tclass0int():
         #assert_equal(x.whatstheanswer['float32'](65.0), 42.0)
 
 def test_tclass0double():
-    for x in [basics.TClass0Double(), basics.TClass0[float](), 
+    for x in [basics.TClass0Double(), basics.TClass0[float](),
               basics.TClass0['float64']()]:
         pass
 
@@ -175,3 +175,9 @@ def test_void_fp_struct():
     x.op = q.append
     basics.call_with_void_fp_struct(x)
     assert_equal(q, [10])
+
+def test_variables():
+    assert basics.pointer_to_a.a == 10
+    assert basics.const_pointer_to_a.a == 20
+    assert basics.pointer_to_const_a.a == 30
+    assert basics.const_pointer_to_const_a.a == 40

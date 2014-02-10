@@ -1342,7 +1342,7 @@ class TypeSystem(object):
             t = self.canon(t)
         except TypeError:
             return False
-        return isinstance(t, Sequence) and t[1] == 0
+        return not isinstance(t, basestring) and t[1] == 0
 
     @memoize_method
     def isarray(self, t):
@@ -1350,7 +1350,7 @@ class TypeSystem(object):
             t = self.canon(t)
         except TypeError:
             return False
-        return isinstance(t, Sequence) and isinstance(t[1], int) and t[1] > 0
+        return not isinstance(t, basestring) and isinstance(t[1], int) and t[1] > 0
 
     @memoize_method
     def isfunctionpointer(self, t):

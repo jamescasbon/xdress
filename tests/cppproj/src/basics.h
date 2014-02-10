@@ -52,7 +52,7 @@ typedef struct VoidFPStruct {
 class A {
  public:
   A() {};
-  A(int b) {};
+  A(int b): a(b) {};
   ~A() {};
   int a;
   virtual void call() {a=1;};
@@ -266,11 +266,11 @@ int untrtn = unt.templated_method<float>(65.0);
 template <cppproj::PersonID> class EnumArg {};
 
 // values 
-cppproj::A * pointer_to_a = new cppproj::A();
+cppproj::A * pointer_to_a = new cppproj::A(10);
 cppproj::A instance_of_a;
-cppproj::A * const const_pointer_to_a = new cppproj::A();
-cppproj::A const * pointer_to_const_a = new cppproj::A();
-cppproj::A const * const const_pointer_to_const_a = new cppproj::A();
+cppproj::A const * const const_pointer_to_a = new cppproj::A(20);
+cppproj::A const * pointer_to_const_a = new cppproj::A(30);
+cppproj::A const * const const_pointer_to_const_a = new cppproj::A(40);
 
 
 #ifdef XDRESS
