@@ -1534,6 +1534,8 @@ def clang_describe_type(typ, loc):
                     clang_describe_type(typ.get_result(), loc))
         elif kind == TypeKind.ENUM:
             return clang_describe_enum(typ.get_declaration())
+        elif kind == TypeKind.INCOMPLETEARRAY:
+            return (clang_describe_type(typ.element_type, loc), '*')
         else:
             raise NotImplementedError('type kind {0}: {1} at {2}'
                 .format(typ.kind, typ.spelling, clang_str_location(loc)))
