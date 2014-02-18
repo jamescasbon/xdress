@@ -261,6 +261,9 @@ int untrtn = unt.templated_method<float>(65.0);
 
 template <cppproj::PersonID> class EnumArg {};
 
+// incomplete arrays 
+int twice_sum(int vals[], int len) { int sum=0; for(int i=0; i<len; i++) { sum += 2 * vals[i]; }; return sum; }
+
 #ifdef XDRESS
 std::vector<double> _temp0;
 std::vector< std::vector<double> > _temp1;
